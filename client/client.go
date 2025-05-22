@@ -5,43 +5,49 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 )
 
-const (
-	serverAddr = "localhost:8000"
-)
+const serverAddress = "localhost:8000"
 
 func main() {
-	conn, err := net.Dial("tcp", serverAddr)
+	conn, err := net.Dial("tcp", serverAddress)
 	if err != nil {
-		fmt.Println("Erro ao conectar ao servidor:", err)
+		fmt.Fprintf(os.Stderr, "Erro ao conectar ao servidor: %v\n", err)
 		return
 	}
 	defer conn.Close()
 
 	fmt.Println("Conectado ao servidor.")
 
-	reader := bufio.NewReader(os.Stdin)
-	serverReader := bufio.NewReader(conn)
+	userInput := bufio.NewReader(os.Stdin)
+	serverResponse := bufio.NewReader(conn)
 
 	for {
-		fmt.Print("Digite a mensagem: ")
-		message, _ := reader.ReadString('\n')
-
-		// Envia mensagem ao servidor
-		_, err := conn.Write([]byte(message))
+		fmt.Print("Você > ")
+		input, err := userInput.ReadString('\n')
 		if err != nil {
-			fmt.Println("Erro ao enviar:", err)
+			fmt.Fprintf(os.Stderr, "Erro ao ler entrada: %v\n", err)
 			break
 		}
 
-		// Lê resposta do servidor
-		reply, err := serverReader.ReadString('\n')
+		input = strings.TrimSpace(input)
+		if input == "" {
+			continue
+		}
+
+		_, err = fmt.Fprintln(conn, input)
 		if err != nil {
-			fmt.Println("Erro ao receber resposta:", err)
+			fmt.Fprintf(os.Stderr, "Erro ao enviar mensagem: %v\n", err)
 			break
 		}
 
-		fmt.Printf("[SERVIDOR]: %s", reply)
+		reply, err := serverResponse.ReadString('\n')
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Erro ao receber resposta: %v\n", err)
+			break
+		}
+
+		fmt.Printf("Servidor > %s", reply)
 	}
 }
