@@ -29,7 +29,7 @@ func handleConnection(conn net.Conn) {
 		fmt.Printf("[CLIENTE] %s", message)
 
 		// Responde para o cliente
-		_, err = conn.Write([]byte("pong\n"))
+		_, err = conn.Write([]byte("Mensagem recebida\n"))
 		if err != nil {
 			fmt.Println("Erro ao enviar resposta:", err)
 			return
